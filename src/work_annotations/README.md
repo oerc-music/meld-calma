@@ -22,5 +22,5 @@ mc:work_f31b7544-2d41-4aa2-86b1-9317308048a2 a mo:MusicalWork ;\
  
 $ python work_annotations.py
 
-Changing "main(multi=False)" to "main(multi=True)" runs the script with multiprocessing, which does not break when encoutnering errors.
+Changing "main(multi=False)" to "main(multi=True)" runs the script with multiprocessing (does not break on errors).
 
