@@ -10,7 +10,7 @@ mc:annotation_0000e0c7-4b4e-4ea2-9003-b2579d3ce71f a oa:Annotation ;
 
 mc:work_f31b7544-2d41-4aa2-86b1-9317308048a2 a mo:MusicalWork ;
     rdfs:label "Killing A Man" ;
-    mo:artist [ foaf:name "Donna the Buffalo" ] .
+    mo:artist <http://etree.linkedmusic.org/artist/4231b840-4aac-012f-19e9-00254bd44c28> .
 
 ## Python dependencies:
 
