@@ -45,8 +45,9 @@ def add2graph3(g, artist):
         g.add((work_uri, RDF.type, mo.MusicalWork))
         g.add((work_uri, RDFS.label, Literal(song)))
         agent = BNode()
-        g.add((work_uri, mo.artist, agent))
-        g.add((agent, foaf.name, Literal(artist.name)))
+        #g.add((work_uri, mo.artist, agent))
+        #g.add((agent, foaf.name, Literal(artist.name)))
+        g.add((work_uri, mo.artist, URIRef(artist.uri)))
         for target in artist.songs[song]:
             annotation_uri = URIRef(mc_uri + 'annotation_' + str(uuid4()))
             g.add((annotation_uri, RDF.type, oa.Annotation))
@@ -109,6 +110,7 @@ def main(multi=True):
     elif multi == False:
         for a in artists:
             makeTurtle(a)
+
 
 main(multi=False)
 
