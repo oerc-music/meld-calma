@@ -120,14 +120,15 @@ def createAnnsLDP(artname, outerCont):
         for target in artist.songs[song]:
             # For each track, create a graph
             g = initGraph()
-            g.add((work_uri, RDF.type, mo.MusicalWork))
+            g.add((work_uri, RDF.type, mc.Song))
             g.add((work_uri, RDFS.label, Literal(song)))
-            g.add((work_uri, mo.artist, URIRef(artist.uri)))
+            g.add((work_uri, mc.performer, URIRef(artist.uri)))
             annotation_id = 'annotation_' + str(uuid4())
             annotation_uri = URIRef(mc_uri + annotation_id)
             g.add((annotation_uri, RDF.type, oa.Annotation))
             g.add((annotation_uri, oa.hasTarget, work_uri))
             g.add((annotation_uri, oa.hasBody, URIRef(target)))
+            g.add((annotation_uri, oa.motivatedBy, mc.SongToRecording))
             # Serialize and POST to LDP server
             turtl = g.serialize(None, base=annotation_uri, format='turtle')
             #print(annotation_uri)
