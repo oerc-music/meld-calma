@@ -10,6 +10,11 @@ from SPARQLWrapper import SPARQLWrapper, JSON
 from multiprocessing import Pool
 from slugify import slugify
 import pickle, bz2
+import requests
+from urllib.parse import urljoin
+
+#Mock
+from test_artist import test_artist
 
 mc_uri = 'http://example.com/meldedcalma/'
 skos = Namespace('http://www.w3.org/2004/02/skos/core#')
@@ -95,13 +100,53 @@ def makeTurtle(artname):
     artist = getArtistGraph(artname)
     g = initGraph()
     add2graph3(g, artist)
-    
 
-def main(multi=True):
-    if not os.path.exists('annotations'):
-        os.makedirs('annotations')
+def createAnnsLDP(artname, outerCont):
+    if artname == '': artname = 'unknown'
+    ##artist = getArtistGraph(artname)
+    artist = test_artist
+    # create LDP container
+    req_headers = { "Content-Type": "text/turtle",
+                    "Link": '<http://www.w3.org/ns/ldp#BasicContainer>; rel="type"',
+                    "Slug": artname }
+    # TODO: don't hardcode verification workaround
+    r = requests.post(outerCont, headers=req_headers, verify=False)
+    #print(r, r.headers)
+    loc = r.headers["Location"]
+    artistCont = urljoin(outerCont, loc)
+    print(artname, r.status_code, artistCont)
+    for song in artist.songs:
+        work_uri = URIRef(mc_uri + 'work_' + str(uuid4()))
+        for target in artist.songs[song]:
+            # For each track, create a graph
+            g = initGraph()
+            g.add((work_uri, RDF.type, mo.MusicalWork))
+            g.add((work_uri, RDFS.label, Literal(song)))
+            g.add((work_uri, mo.artist, URIRef(artist.uri)))
+            annotation_id = 'annotation_' + str(uuid4())
+            annotation_uri = URIRef(mc_uri + annotation_id)
+            g.add((annotation_uri, RDF.type, oa.Annotation))
+            g.add((annotation_uri, oa.hasTarget, work_uri))
+            g.add((annotation_uri, oa.hasBody, URIRef(target)))
+            # Serialize and POST to LDP server
+            turtl = g.serialize(None, base=annotation_uri, format='turtle')
+            #print(annotation_uri)
+            #print(str(turtl,'utf-8'))
+            req_headers["Link"] = ''
+            req_headers["Slug"] = annotation_id
+            # TODO: don't hardcode verification workaround
+            r = requests.post(artistCont, data=turtl, headers=req_headers, verify=False)
+            loc = r.headers["Location"] if (r.status_code == 201) else None
+            print("Annotation add:", annotation_id, loc)
+
+def main(multi=False):
+    container = "https://localhost:8443/public/"
+    if (os.environ["CONTAINER"]): container = os.environ["CONTAINER"]
+    #if not os.path.exists('annotations'):
+    #    os.makedirs('annotations')
     print('querying artists')
-    artists = sorted(queryArtistNames())
+    ##artists = sorted(queryArtistNames())
+    artists = ["Yarn", "Cool Band2!"]
     if multi == True:
         pool = Pool()
         pool.map(makeTurtle, artists, chunksize=1)
@@ -109,8 +154,8 @@ def main(multi=True):
         pool.join()
     elif multi == False:
         for a in artists:
-            makeTurtle(a)
-
+            createAnnsLDP(a, container)
+            #makeTurtle(a)
 
 main(multi=False)
 
