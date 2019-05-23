@@ -18,10 +18,14 @@ mc:work_f31b7544-2d41-4aa2-86b1-9317308048a2 a mo:MusicalWork ;\
 - rdflib
 - SPARQLwrapper
 - python-slugify
+- requests
 
 ## Run: 
- 
+
+$ export CONTAINER=<URI-OF-LDP-CONTAINER>
+
 $ python work_annotations.py
 
 Changing "main(multi=False)" to "main(multi=True)" runs the script with multiprocessing (does not break on errors).
+[Not currently used]
 
