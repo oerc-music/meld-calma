@@ -10,6 +10,7 @@ SPARQL = SPARQLWrapper("http://etree.linkedmusic.org/sparql")
 SPARQL.setReturnFormat(JSON)
 MC = Namespace('http://example.com/meldedcalma/')
 OA = Namespace('http://www.w3.org/ns/oa#')
+CALMA = Namespace('http://calma.linkedmusic.org/vocab/')
 
 
 def getArtistId(artist_name):
@@ -20,16 +21,15 @@ def getArtistId(artist_name):
 
 def getEtreeTracks(artist_id, song_name):
     q = ''' PREFIX mo: <http://purl.org/ontology/mo/>
-            PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
             PREFIX calma: <http://calma.linkedmusic.org/vocab/>
-            SELECT ?trackId {{ 
+            SELECT ?trackId ?calmaId {{ 
             ?trackId mo:performer <{0}> ;
                 skos:prefLabel "{1}" ;
-                calma:data ?calma }}'''.format(artist_id, song_name)
+                calma:data ?calmaId }}'''.format(artist_id, song_name)
     SPARQL.setQuery(q)
     track_ids = []
     for res in SPARQL.query().convert()["results"]["bindings"]:
-        track_ids.append(res['trackId']['value'])
+        track_ids.append((res['trackId']['value'], res['calmaId']['value']))
     return track_ids
 
 
@@ -48,7 +48,7 @@ def createSongLDP(artist_name, song_name):
     artist_cont = urljoin(CONTAINER, loc)
     song_id = 'song_' + str(uuid4()).replace('-','')
     g = Graph()
-    g.bind('mc', 'http://example.com/meldedcalma/')
+    g.bind('mc', MC)
     g.add((MC[song_id], RDF.type, MC.Song))
     g.add((MC[song_id], RDFS.label, Literal('{0} by {1}'.format(song_name, artist_name))))
     g.add((MC[song_id], MC.performer_name, Literal(artist_name)))
@@ -69,10 +69,11 @@ def createSongTrackAnnotation(artist_name, artist_id, song_name, track_ids, song
     loc = r.headers["Location"]
     annotations_cont = urljoin(CONTAINER, loc)
     print(annotations_cont)
-    for t in track_ids:
+    for track_id, calma_id in track_ids:
         g = Graph()
-        g.bind('mc', 'http://example.com/meldedcalma/')
-        g.bind('oa', 'http://www.w3.org/ns/oa#')
+        g.bind('mc', MC)
+        g.bind('oa', OA)
+        g.bind('calma', CALMA)
         annotation_id = 'annotation_' + str(uuid4()).replace('-','')
         annotation_uri = MC[annotation_id]
         g.add((annotation_uri, RDF.type, OA.Annotation))
@@ -80,7 +81,8 @@ def createSongTrackAnnotation(artist_name, artist_id, song_name, track_ids, song
         body_bnode = BNode()
         g.add((annotation_uri, OA.hasBody, body_bnode))
         g.add((body_bnode, MC.etree_performer_id, URIRef(artist_id)))
-        g.add((body_bnode, MC.etree_track, URIRef(t)))
+        g.add((body_bnode, CALMA.data, URIRef(calma_id)))
+        g.add((body_bnode, MC.etree_track, URIRef(track_id)))
         g.add((annotation_uri, OA.motivatedBy, MC.SongToRecording))
         turtl = g.serialize(None, base=annotation_uri, format='turtle')
         req_headers["Link"] = ''
