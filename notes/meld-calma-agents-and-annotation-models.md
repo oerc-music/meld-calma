@@ -49,35 +49,36 @@ Proposed, then, is something like:
 
     /public
 
+      /artists
+        /artist_xyz.ttl
+          <> a mc:Artist (?) ;
+            rdfs:label "xyz" ;
+            mc:artist_name "xyz" ;
+            mc:etree_artist_id <xyz> ; // (full URI in etree)
+            . 
+
       /artists_songs
         /Mogwai_xyz
           /song_xyz.ttl
             <> a mc:Song (?) ;
               rdfs:label "Acid Food by Mogwai" ;
               mc:song_name "Acid Food" ;
-              mc:artist_name "Mogwai" ;
+              mc:artist </public/artists/artist_Mogwai.ttl> ;  // (URIref link to entry in /artists)
+              mc:etree_song_id <xyzxyz> ; // (full URI in etree)
               .
-         :
+          :
 
       /song_to_recording
         /song_annotation_xyz.ttl
           <> a oa:Annotation ;
             oa:motivatedBy mc:SONG_TO_RECORDING ;
-            oa:hasTarget <song_xyz.ttl>
+            oa:hasTarget </public/artists_songs/artist_xyz/song_xyz.ttl> // URIref to entry in /artists_songs...
             oa:hasBody <etree_recording_id>
-            .
-
-      /artist_name_to_id
-        /artist_annotation_xyz.ttl
-          <> a oa:Annotation ;
-            oa:motivatedBy mc:ARTIST_ID_NAME ;
-            oa:hasTarget <...artists_songs/Mogwai_xyz>
-            oa:hasBody   [ mc:artist_name "Mogwai" ]    <-- body is bnode; could (should?) have URI
             .
 
 And maybe later...
 
-      /song_name_to_id
+      /song_name_to_id          // Later support for alternative/mis-typed song names
         /song_annotation_xyz.ttl
           <> a oa:Annotation ;
             oa:motivatedBy mc:SONG_ID_NAME ;
@@ -85,11 +86,28 @@ And maybe later...
             oa:hasBody   [ mc:song_name "Acid Food", "acid food", "AcidFood", etc. ]
             .
 
+      /artist_name_to_id      // If required to allow SOFA to access artist info without special interface
+                              // Also possible support for alternative names
+        /artist_annotation_xyz.ttl
+          <> a oa:Annotation ;
+            oa:motivatedBy mc:ARTIST_ID_NAME ;
+            oa:hasTarget </public/artists/Mogwai_xyz> ;
+            oa:hasBody   [ mc:artist_name "Mogwai" ] ;    // body is bnode; could (should?) have URI
+            .
+
+
 Note that the structure of container names here is illustrative: agents and clients should discover container references by following indexes rather than knowledge of the naming structure used.
 
 Otherwise, there seems to have been good progress on the agent, with data extracted from CALMA being written to contaimners on a Solid server, though some design decisions still need to be finalized.
 
 We discussed introducing the notion of a "song reference" as a way to populate worksets of songs (see below).  (See also "fragment reference": https://thalassa2.oerc.ox.ac.uk:4443/public/DEMO/FragRef-009362d3-45d3-469b-be15-c4646f335525.ttl)
+
+
+## Fetch-and-unpack agent
+
+(Mentioned by TW in 2019-06-12 meeting)
+
+For now, this functionality is incorporated directly into the "Key distribution per recording agent".
 
 
 ## Number of occurrences agent
@@ -105,13 +123,6 @@ Create a container of annotations that target songs, and record a count of recor
             oa:hasTarget <song_xyz> ;
             oa:hasBody   [ mc:number_of_recordings "n" ] ;
             .
-
-
-## Fetch-and-unpack agent
-
-(Mentioned by TW in 2019-06-12 meeting)
-
-@@TODO
 
 
 ## Song selection agent
@@ -160,7 +171,9 @@ The intent is that as each recording is processed by the Song selection agent, i
 
 ## Key distribution per recording agent
 
-For a given song-workset (created by Song selection agent), accesses the CALMA data for each recording and writes an annotation for each recording describing the key detection information (containing detected keys and duration within recording).
+(Recording == track per CALMA?)
+
+For a given song-workset (created by Song selection agent), accesses the CALMA data for each recording and writes an annotation for each recording describing the key detection (key change event) information (containing detected keys and duration within recording).
 
 The resulting annotations would have this general form:
 
@@ -170,21 +183,32 @@ The resulting annotations would have this general form:
       oa:hasBody (details @@TBD, based on key disribution data for recording obtained from CALMA)
       .
 
+(@@currently, logic in key_typicality.py)
 
-## Similar occurrences agent (key typicality)
 
-For all recordings, compute an "average" key distribution across all recordings of a given song (workset), and create a per-song annotation recording this.  Then for each recording, calculate a "key typicality" measure that represents deviation from average key distribution of that recording, and create a per-recording annotation for this.
+## Key distribution per song agent
+
+For all recordings, compute an "average" key distribution across all recordings of a given song (workset), and create a per-song annotation recording this.
 
     <> a oa:Annotation ;
       oa:motivatedBy mc:SONG_KEY_PREVALANCE ;
       oa:hasTarget (song reference in song workset)
       oa:hasBody 
         [ mc:key_info 
-          [ mc:key_id (key id) ;
-            mc:average_prevalence "(fraction)"^(xsd:double)
+          [ @@include transform info - vamp plugin, parameters, etc - see key_typicality.py outputs
+            rdfs:label "Dd major" (e.g.)
+            mc:key_id "(key id)"^^xsd:integer ;
+            mc:average_prevalence "(fraction)"^(xsd:double) ;  // duration of key/duration of song * (something)
           ]
         ]
       .
+
+Also, add a record of the annotation container to a "feature index" container (to allow selection of alternative features for typicality displays).
+
+
+## Key typicality agent
+
+For each recording of a song, calculate a "key typicality" measure that represents deviation of that recording from average key distribution for the song as calculated by the "Key distribution per song agent", and create a per-recording annotation for this.
 
     <> a oa:Annotation ;
       oa:motivatedBy mc:RECORDING_KEY_TYPICALITY ;
