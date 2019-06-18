@@ -39,7 +39,7 @@ We discussed what further agents will be needed, and data models for the annotat
 
 ![MELD/CALMA music flows](images/20190604-MELD-CALMA-flows.jpg)
 
-Thenotes below focus on the data models for the annotations produced by trhe various agents.
+The notes below focus on the data models for the annotations produced by the various agents.
 
 ## Song-to-signal agent
 
