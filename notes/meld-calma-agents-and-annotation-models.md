@@ -105,9 +105,11 @@ We discussed introducing the notion of a "song reference" as a way to populate w
 
 ## Fetch-and-unpack agent
 
+Pulling summarized information from eTree/CALMA.  "Data summary agent"?  Also, note that CALMA data doesn't have globally unique IDs, so need to allocate these (JPNP).  (This is why the source data is kept in TAR files.)
+
 (Mentioned by TW in 2019-06-12 meeting)
 
-For now, this functionality is incorporated directly into the "Key distribution per recording agent".
+For now, this functionality is incorporated directly into the "Key distribution per recording agent"and friends.
 
 
 ## Number of occurrences agent
@@ -183,6 +185,8 @@ The resulting annotations would have this general form:
       oa:hasBody (details @@TBD, based on key disribution data for recording obtained from CALMA)
       .
 
+Also, add a record of the annotation container to a "feature index" container (to allow selection of alternative features for typicality displays).
+
 (@@currently, logic in key_typicality.py)
 
 
@@ -210,6 +214,8 @@ Also, add a record of the annotation container to a "feature index" container (t
 
 For each recording of a song, calculate a "key typicality" measure that represents deviation of that recording from average key distribution for the song as calculated by the "Key distribution per song agent", and create a per-recording annotation for this.
 
+@@TODO Structure here should be rebviewed in light of "Key distribution per song agent" output.
+
     <> a oa:Annotation ;
       oa:motivatedBy mc:RECORDING_KEY_TYPICALITY ;
       oa:hasTarget (recording reference in recording workset)
@@ -218,7 +224,7 @@ For each recording of a song, calculate a "key typicality" measure that represen
           mc:key_info [ 
             mc:key_id (key id) ;
             mc:prevalence "(fraction)"^xsd:double ;
-            mc:average_prevalence "(fraction)"^xsd:double ;
+            mc:average_prevalence "(fraction)"^xsd:double ;=
           ]
         ]
       .
