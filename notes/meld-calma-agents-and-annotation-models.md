@@ -7,15 +7,9 @@ These are working/tentative design notes, not yet a fixed design.
 
 # Supporting structures
 
-## Annotation container index details
-
-@@TODO.  
-
-See also "workset_feature_index" in "Song selection agent" below?
-
-The intent here is that a specified or directly discoverable container will contain references to all other containers referenced directly or indirectly by the various annotation agents and display (remixer) client software.  There should be enough information to allow containers to be located without explicit prior knowledge beyond the general data model schema - the software should be able to work with annotation containers (and worksets) stored at arbitrary, distriburted locations.
-
 ## Song workset
+
+@@CHECK/REVIEW: I've assumed that the Song workset is the entry-point URL for subsequent processing.  I don't recall offhand how SOFA locates its indexes - it appears to not use the workset container.
 
 At some point, we may want to add a notion of a "song workset", which follows the general structure of a SOFA workset, but references songs rather than to fragments.  The members of a song workset could look something like this:
 
@@ -31,6 +25,36 @@ At some point, we may want to add a notion of a "song workset", which follows th
         dct:created "2019-06-01T14:09:58+0100";
         meld:ref <artists_songs/Mogwai_xyz/song_xyz.ttl>
         .
+
+Thus, a "Song workset" represents some collection of songs, which may be used to scope a series of related agent and client operations.
+
+A song workset URI is the URI of a an LDP/Solid container, whose individual members are `SongRef` values (see below) describing indiviudual songs.  Thus new songs are added by adding new `SongRef` resources.
+
+Song workset container-level metadata includes:
+
+    mc:artists         (reference to artists container)         // see below
+    mc:artist_songs    (reference to artist songs container)    // see below
+    mc:annotationIndex (reference to feature index container)   // see below
+
+There may be any number of these worksets.
+
+See [here](https://thalassa2.oerc.ox.ac.uk:4443/public/workset1/) for example of a SOFA workset.
+
+## Song workset feature index
+
+The intent here is that a specified or directly discoverable container will contain references to all other containers referenced directly or indirectly by the various annotation agents and display (remixer) client software.  There should be enough information to allow containers to be located without explicit prior knowledge beyond the general data model schema - the software should be able to work with annotation containers (and worksets) stored at arbitrary, distributed locations.
+
+The feature index is itself an annotation container, which should be created and linked when the Song workset container is created.
+
+Each song-related annotation container created or populated by one of the agents will have an index entry like this:
+
+    <> a oa:Annotation ;
+      oa:motivatedBy mc:FEATURE_INDEX ;        
+      oa:hasTarget (feature identifier) ;   // A known constant, not necessarily dereferencable.
+      oa:hasBody   (feature container) ;    // URL of feature annotation container
+      .
+
+See also "workset_feature_index" in "Song selection agent" below?
 
 
 # Agent landscape
@@ -59,6 +83,9 @@ Proposed, then, is something like:
 
       /artists_songs
         /Mogwai_xyz
+          mc:artist </public/artists/artist_Mogwai.ttl> ;   // (URIref link to entry in /artists)
+                                                            // Stored as container metadata
+
           /song_xyz.ttl
             <> a mc:Song (?) ;
               rdfs:label "Acid Food by Mogwai" ;
@@ -98,9 +125,9 @@ And maybe later...
 
 Note that the structure of container names here is illustrative: agents and clients should discover container references by following indexes rather than knowledge of the naming structure used.
 
-Otherwise, there seems to have been good progress on the agent, with data extracted from CALMA being written to contaimners on a Solid server, though some design decisions still need to be finalized.
+Note that annotations are defined using the `<>` for a URI reference: this resolves to the URI of the containing resource, and can be used to dereference a fgiven annotation (e.g. if annotations are being processed from a graph of merged annotations.)
 
-We discussed introducing the notion of a "song reference" as a way to populate worksets of songs (see below).  (See also "fragment reference": https://thalassa2.oerc.ox.ac.uk:4443/public/DEMO/FragRef-009362d3-45d3-469b-be15-c4646f335525.ttl)
+The "song to recording" annotation container is added to the "Song workset feature index"
 
 
 ## Fetch-and-unpack agent
@@ -109,7 +136,7 @@ Pulling summarized information from eTree/CALMA.  "Data summary agent"?  Also, n
 
 (Mentioned by TW in 2019-06-12 meeting)
 
-For now, this functionality is incorporated directly into the "Key distribution per recording agent"and friends.
+For now, this functionality is incorporated directly into the "Key distribution per recording agent" and friends.
 
 
 ## Number of occurrences agent
@@ -135,25 +162,25 @@ Uses the number of occurrences annotations to create new worksets containing rec
 
       /recording_workset_container
         /recording_xyz
-          <recording reference (see below)>
+          <recording reference (see "Recording workset" below)>
           :
 
-      /workset_feature_index
-        /anno_workset_xyz
+      /recording_workset_feature_index
+        /anno_workset_xyz.ttl
           <> a oa:Annotation ;
             oa:motivatedBy mc:WORKSET_FEATURE_INDEX ;
             oa:hasTarget <recording_workset_container>
-            oa:hasBody   <workset_feature_container>
+            oa:hasBody   <workset_feature_index_container>
             .
 
 A separate "Recording workset container" is created for each song identified in the data.  (Later, the annotations may be extended to allow different songs to be treated as variations of the same Work.)
 
-Any agent that subsequently creates a feature annotation container for a workset should also add an entry for that container 
+Any agent that subsequently creates a feature annotation container for a workset should also add an annotation container index entry for that container 
 
 
 ### Recording workset
 
-We add here a notion of a "recording workset", which follows the structure of a SOFA workset that contains references to CALMA recordings rather than to fragments.  The members of a recording workset container look something like this:
+We add here a notion of a "recording workset", which follows the structure of a SOFA workset that contains references to CALMA recordings rather than to fragments.  This will contain references to some subset of the recordings of songs in the corresponding "Song workset".  The members of a recording workset container look something like this:
 
     @prefix ldp:  <http://www.w3.org/ns/ldp#>.
     @prefix dc:   <http://purl.org/dc/elements/>.
@@ -168,7 +195,7 @@ We add here a notion of a "recording workset", which follows the structure of a 
         meld:ref <CALMA recording URI>
         .
 
-The intent is that as each recording is processed by the Song selection agent, its details are stored in the "Recording workset", which can be used to enumerate (or scope) the subsequent activities of annaotation agents and the display (remixer) client.
+The intent is that as each recording is processed by the Song selection agent, its details are stored in the "Recording workset", which can be used to enumerate (or scope) the subsequent activities of annotation agents and the display (remixer) client.
 
 
 ## Key distribution per recording agent
@@ -177,15 +204,23 @@ The intent is that as each recording is processed by the Song selection agent, i
 
 For a given song-workset (created by Song selection agent), accesses the CALMA data for each recording and writes an annotation for each recording describing the key detection (key change event) information (containing detected keys and duration within recording).
 
+@@TODO Structure here should be reviewed in light of "Key distribution per song agent" output.
+
 The resulting annotations would have this general form:
 
     <> a oa:Annotation ;
-      oa:motivatedBy mc:KEY_DISTRIBUTION ;
-      oa:hasTarget (recording reference in recording workset)
-      oa:hasBody (details @@TBD, based on key disribution data for recording obtained from CALMA)
+        oa:motivatedBy mc:KEY_DISTRIBUTION ;
+        oa:hasTarget (recording reference in recording workset)
+        oa:hasBody [
+            mc:key_id (key id) ;                    // ???
+            mc:prevalence "(fraction)"^xsd:double ; // ???
+
+            @@other details TBD, based on key distribution data for recording obtained from CALMA
+            @@include transform info - vamp plugin, parameters, etc - see key_typicality.py outputs
+            ];
       .
 
-Also, add a record of the annotation container to a "feature index" container (to allow selection of alternative features for typicality displays).
+Also, add a record of the annotation container to the "recording workset feature index" container (to allow selection of alternative features for typicality displays).
 
 (@@currently, logic in key_typicality.py)
 
@@ -199,22 +234,21 @@ For all recordings, compute an "average" key distribution across all recordings 
       oa:hasTarget (song reference in song workset)
       oa:hasBody 
         [ mc:key_info 
-          [ @@include transform info - vamp plugin, parameters, etc - see key_typicality.py outputs
-            rdfs:label "Dd major" (e.g.)
+          [ rdfs:label "Dd major" (e.g.)
             mc:key_id "(key id)"^^xsd:integer ;
             mc:average_prevalence "(fraction)"^(xsd:double) ;  // duration of key/duration of song * (something)
           ]
         ]
       .
 
-Also, add a record of the annotation container to a "feature index" container (to allow selection of alternative features for typicality displays).
+Also, add a record of the annotation container to the "recording workset feature index" container (to allow selection of alternative features for typicality displays).
 
 
 ## Key typicality agent
 
 For each recording of a song, calculate a "key typicality" measure that represents deviation of that recording from average key distribution for the song as calculated by the "Key distribution per song agent", and create a per-recording annotation for this.
 
-@@TODO Structure here should be rebviewed in light of "Key distribution per song agent" output.
+@@TODO Structure here should be reviewed in light of "Key distribution per song agent" output.
 
     <> a oa:Annotation ;
       oa:motivatedBy mc:RECORDING_KEY_TYPICALITY ;
@@ -229,7 +263,7 @@ For each recording of a song, calculate a "key typicality" measure that represen
         ]
       .
 
-Also, add a record of the annotation container to a "feature index" container (to allow selection of alternative features for typicality displays).
+Also, add a record of the annotation container to the "recording workset feature index" container (to allow selection of alternative features for typicality displays).
 
 
 ## SOFA display client
