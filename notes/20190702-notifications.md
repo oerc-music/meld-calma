@@ -10,8 +10,6 @@ See:
 - https://nodejs.org/api/child_process.html#child_process_child_process
 
 
-
-
 # Basic operation
 
 ## Discovery
@@ -71,6 +69,8 @@ See: https://github.com/websockets/ws
 
 # meld-tool enhancements
 
+NOTE: The WebSocket cient/server options have been implementd in a new tool, `ws-tool-cli.js`.
+
 ## Websocket server
 
     meld-tool ws_server <port>
@@ -89,5 +89,5 @@ Sends data to a listening WebSockets server at <uri>, and waits for `ms` millise
 
     meld-tool resource_listen <uri>
 
-Listen for changes to resource `<uri>`.  When a change is detected, return the published messge to standard output, and exit.
+Listen for changes to Solid resource `<uri>`.  When a change is detected, return the published messge to standard output, and exit.
 
