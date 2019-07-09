@@ -195,7 +195,7 @@ def main():
     artist_etree, track_etrees = queryTracks(artist_name, song_name)
     artist_loc, artist_song_loc = createArtistLDPs(artist_name, artist_etree, artists_loc, songs_loc)
     song_loc = createSongLDP(artist_name, song_name, artist_loc, artist_song_loc)
-    #createSongTrackAnnotation(artist_loc, track_etrees, song_loc, recordings_loc)
+    createSongTrackAnnotation(artist_loc, track_etrees, song_loc, recordings_loc)
 
 
 
