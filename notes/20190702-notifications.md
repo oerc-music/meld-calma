@@ -69,7 +69,7 @@ See: https://github.com/websockets/ws
 
 # meld-tool enhancements
 
-NOTE: The WebSocket cient/server options have been implementd in a new tool, `ws-tool-cli.js`.
+NOTE: The WebSocket cient/server options have been implemented in a new tool, `ws-tool-cli.js`.
 
 ## Websocket server
 
