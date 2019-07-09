@@ -93,7 +93,7 @@ def createSongLDP(artist_name, song_name, artist_loc, artist_song_loc):
     return song_loc
 
 
-def createArtistLDPs(artist_name, artist_etree, artists_loc):
+def createArtistLDPs(artist_name, artist_etree, artists_loc, songs_loc):
     artists_cont = urljoin(CONTAINER, artists_loc)
     #artist_id = randomId('artist')
     g = Graph()
@@ -108,8 +108,12 @@ def createArtistLDPs(artist_name, artist_etree, artists_loc):
     meta_loc = r.headers["Location"] if (r.status_code == 201) else None
     print("Artist metadata:", meta_loc)
 
+    g = Graph()
+    artist_song_loc = urljoin(CONTAINER, songs_loc)
+    g.add((URIRef(artist_song_loc), MC.perfomer, URIRef(meta_loc)))
+    turtl = g.serialize(None, base=artist_song_loc, format='turtle')
     req_headers = getRequestHeaders(slug=artist_name)
-    r = requests.post(CONTAINER + 'artists_songs', headers=req_headers, verify=False)
+    r = requests.post(artist_song_loc, data=turtl, headers=req_headers, verify=False)
     artist_song_loc = r.headers["Location"]
     print("Artist (Songs) add:", artist_song_loc)
     return meta_loc, artist_song_loc
@@ -164,7 +168,7 @@ def main():
     song_name = sys.argv[2]
     artists_loc, songs_loc, recordings_loc, occurrences_loc = createTopLDPs()
     artist_etree, track_etrees = queryTracks(artist_name, song_name)
-    artist_loc, artist_song_loc = createArtistLDPs(artist_name, artist_etree, artists_loc)
+    artist_loc, artist_song_loc = createArtistLDPs(artist_name, artist_etree, artists_loc, songs_loc)
 
     song_loc = createSongLDP(artist_name, song_name, artist_loc, artist_song_loc)
     createSongTrackAnnotation(artist_loc, track_etrees, song_loc, recordings_loc)
