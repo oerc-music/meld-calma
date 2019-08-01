@@ -23,7 +23,7 @@
 # 7. Run this script
 #
 
-# Disable meld-tool attemt to authenticate
+# Disable meld-tool attempt to authenticate
 export MELD_USERNAME=
 
 # Test containers created
@@ -34,7 +34,6 @@ node $MELD_TOOL test-is-container /public/artists_songs/Mogwai
 node $MELD_TOOL test-is-container /public/song_to_recording/
 
 # Test resource content
-
 
 RESOURCE="/public/artists/Mogwai.ttl"
 # node $MELD_TOOL show-resource $RESOURCE
@@ -63,6 +62,30 @@ node $MELD_TOOL --stdinurl="$RESOURCE" test-rdf-resource $RESOURCE - <<END
     rdfs:label "acid food by Mogwai" ;
     mc:performer </public/artists/Mogwai.ttl> ;
     mc:song_name "acid food" .
+END
+
+# Test annotation content
+
+RESOURCE=/public/song_to_recording/
+ANNOTATIONS=$(node $MELD_TOOL list-container $RESOURCE)
+for anno in $ANNOTATIONS; do
+    # Pick off first annotation
+    ANNOTATION=$anno
+    break
+done
+
+node $MELD_TOOL --stdinurl="$ANNOTATION" test-rdf-resource $ANNOTATION - <<END
+@prefix mc: <http://example.com/meldedcalma/> .
+@prefix oa: <http://www.w3.org/ns/oa#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<> a oa:Annotation ;
+    oa:hasBody _:body ;     # Wildcard match etree URI; how to test URI domain?
+    oa:hasTarget </public/artists_songs/Mogwai/acid_food_by_Mogwai.ttl> ;
+    oa:motivatedBy mc:SONG_TO_RECORDING .
 END
 
 # End.
