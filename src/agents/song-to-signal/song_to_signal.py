@@ -173,6 +173,8 @@ def checkLDP(sl):
     if r.status_code == 200:
         loc = cont
         print('{0} exists:'.format(sl), loc)
+    elif r.status_code == 401:
+        raise "Need to run Solid server with webid=false"
     else:
         req_headers = getRequestHeaders(slug=sl)
         r = requests.post(CONTAINER, headers=req_headers, verify=False)
