@@ -1,4 +1,3 @@
-# Tests for song-to-signal agent
 #
 # To run these tests:
 #
@@ -6,21 +5,24 @@
 #
 # 2. Install meld-tool (clone from https://github.com/oerc-music/meld-cli-tools)
 #
-# 3. Change to directory where meld-tool is installed, then to subdirectory `src/meld-tool/`
+# 3. Change to directory where meld-tool is installed, 
+#           comthen to subdirectory `src/meld-tool/`
 #
-# 4. Set up meld-tool. environment:
+# 4. Run Solid server as described in README.md
+#
+# 5. Set up meld-tool. environment:
 #
 #        . setenv.sh
 #
-# 5. Remove containers created by agent:
+# 6. Remove containers created by agent:
 #
 #       node $MELD_TOOL remove-container /public/artists/
 #       node $MELD_TOOL remove-container /public/artists_songs/
 #       node $MELD_TOOL remove-container /public/song_to_recording/
 #
-# 6. Run Solid server and song-to-signal agent as described in README.md
+# 7. Run Solid server and song-to-signal agent as described in README.md
 #
-# 7. Run this script
+# 8. Run this script
 #
 
 # Disable meld-tool attempt to authenticate
