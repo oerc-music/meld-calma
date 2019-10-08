@@ -242,14 +242,14 @@ The resulting annotations would have this general form:
 -->
 
     <> a oa:Annotation ;
-      oa:motivatedBy mc:KEY_DISTRIBUTION ;
+      oa:motivatedBy mc:KEY_DURATION_RATIOS ;
       oa:hasTarget (recording reference in recording workset, which references CALMA recording)
       oa:hasBody 
         [ mc:key_info 
             [ a mc:FeatureDurationRatio ;
               rdfs:label "Dd major" ;
               mc:key_id "(key id)"^^xsd:integer ;
-              mc:duration_ratio "(fraction)"^(xsd:double) ;  // key-duration/song-recording-duration;
+              mc:duration_ratio "(fraction)"^(xsd:double) ;  // key-duration/recording-duration;
               mc:on_timeline <#timeline> ;
               mc:transform <#transform> ;
             ] ;
@@ -257,7 +257,7 @@ The resulting annotations would have this general form:
             [ a mc:FeatureDurationRatio ;
               rdfs:label "Bd major" ;
               mc:key_id "(key id)"^^xsd:integer ;
-              mc:duration_ratio "(fraction)"^(xsd:double) ;  // key-duration/song-recording-duration
+              mc:duration_ratio "(fraction)"^(xsd:double) ;  // key-duration/recording-duration
               mc:on_timeline <#timeline> ;
               mc:transform <#transform> ;
             ] ;
@@ -265,8 +265,8 @@ The resulting annotations would have this general form:
         ] .
     // Additional data within the Anotation resource, 
     // which is referenced indirectly by multiple annotation bodies.
-    // Uses fragment identifiers in annotation resource (base URI) for URIs.
-    <(etree-recording-reference)> etree:audio       // As referenced by recording reference above
+    // Uses fragment identifier in annotation resource (base URI) for timeline URI.
+    (etree-recording-reference) etree:audio       // As referenced by recording reference above
         [ mo:encodes 
             [ a mo:Signal ;
               mo:Time 
@@ -279,12 +279,15 @@ The resulting annotations would have this general form:
       <#transform> @@@TODO@@@ ;
       .
 
-(An alternative approach might be to have the timeline value generated as part of the recording
-workset entry `mc:RecordingRef`, and simply reference that value.)
-
 Also, add a record of the annotation container to the "recording workset feature index" container (to allow selection of alternative features for typicality displays).
 
 (@@currently, logic in key_typicality.py)
+
+### Notes
+
+An alternative, maybe better, approach might be to have the timeline value generated as part of the recording workset entry `mc:RecordingRef`, and simply reference that value.
+
+Should the annotations be creating generic `mc:FeatureDurationRatio` values, when some properties used (e.g. `mc:key_id`) are quite specific to key signatures.  Maybe define `mc:KeyDurationRatio` as subclass of `mc:FeatureDurationRatio`?
 
 
 ## Key distribution per song agent
