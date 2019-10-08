@@ -219,6 +219,9 @@ Any agent that subsequently creates a feature annotation container for a recordi
 
 For a given recording-workset (created by Song selection agent), accesses the CALMA data for each recording and writes an annotation for each recording describing the key detection (key change event) information (containing detected keys and duration within recording).
 
+NOTE (2019-10-08): this has been updated to put all chord information for a recording in a single annotation.  There may be a knock-on effect for the "Key distribution per song" agent.
+
+<!--
 @@TODO Structure here should be reviewed in light of "Key distribution per song agent" output.
 
 The resulting annotations would have this general form:
@@ -236,6 +239,48 @@ The resulting annotations would have this general form:
       .
 
 @@TODO: update this with details from TW' implementation.
+-->
+
+    <> a oa:Annotation ;
+      oa:motivatedBy mc:KEY_DISTRIBUTION ;
+      oa:hasTarget (recording reference in recording workset, which references CALMA recording)
+      oa:hasBody 
+        [ mc:key_info 
+            [ a mc:FeatureDurationRatio ;
+              rdfs:label "Dd major" ;
+              mc:key_id "(key id)"^^xsd:integer ;
+              mc:duration_ratio "(fraction)"^(xsd:double) ;  // key-duration/song-recording-duration;
+              mc:on_timeline <#timeline> ;
+              mc:transform <#transform> ;
+            ] ;
+          mc:key_info
+            [ a mc:FeatureDurationRatio ;
+              rdfs:label "Bd major" ;
+              mc:key_id "(key id)"^^xsd:integer ;
+              mc:duration_ratio "(fraction)"^(xsd:double) ;  // key-duration/song-recording-duration
+              mc:on_timeline <#timeline> ;
+              mc:transform <#transform> ;
+            ] ;
+           :
+        ] .
+    // Additional data within the Anotation resource, 
+    // which is referenced indirectly by multiple annotation bodies.
+    // Uses fragment identifiers in annotation resource (base URI) for URIs.
+    <(etree-recording-reference)> etree:audio       // As referenced by recording reference above
+        [ mo:encodes 
+            [ a mo:Signal ;
+              mo:Time 
+                [ a tl:Interval ;
+                  tl:duration (ISO time duration literal) ;
+                  tl:onTimeline <#timeline> ;
+                ]
+            ]
+        ]
+      <#transform> @@@TODO@@@ ;
+      .
+
+(An alternative approach might be to have the timeline value generated as part of the recording
+workset entry `mc:RecordingRef`, and simply reference that value.)
 
 Also, add a record of the annotation container to the "recording workset feature index" container (to allow selection of alternative features for typicality displays).
 
