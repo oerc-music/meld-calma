@@ -1,8 +1,10 @@
 from rdflib import Graph, URIRef, RDF, RDFS, Namespace, Literal, BNode
+from rdflib.namespace import DC, DCTERMS
 from SPARQLWrapper import SPARQLWrapper, JSON
-import requests, os, sys
+import requests, os, sys, getpass
 from urllib.parse import urljoin
 from uuid import uuid4
+from datetime import datetime
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -14,6 +16,7 @@ SPARQL.setReturnFormat(JSON)
 MC = Namespace('http://example.com/meldedcalma/')
 OA = Namespace('http://www.w3.org/ns/oa#')
 LDP = Namespace('http://www.w3.org/ns/ldp#')
+MELD = Namespace('http://example.com/meld/')
 
 ETREE_QUERY = '''
 PREFIX mo: <http://purl.org/ontology/mo/>
@@ -79,13 +82,14 @@ def createSongLDP(artist_name, song_name, artist_loc, artist_song_loc):
     artist_song_loc = urljoin(CONTAINER, artist_song_loc)
     #song_id = randomId('song')
     song_id = '{0} by {1}'.format(song_name, artist_name) 
+    base_uri = URIRef('')
     g = Graph()
     g.bind('mc', MC)
-    g.add((URIRef(artist_song_loc), RDF.type, MC.Song))
-    g.add((URIRef(artist_song_loc), RDFS.label, Literal(song_id)))
-    g.add((URIRef(artist_song_loc), MC.performer, URIRef(artist_loc)))
-    g.add((URIRef(artist_song_loc), MC.song_name, Literal(song_name)))
-    turtl = g.serialize(None, base=artist_song_loc, format='turtle')
+    g.add((base_uri, RDF.type, MC.Song))
+    g.add((base_uri, RDFS.label, Literal(song_id)))
+    g.add((base_uri, MC.performer, URIRef(artist_loc)))
+    g.add((base_uri, MC.song_name, Literal(song_name)))
+    turtl = g.serialize(None, base=base_uri, format='turtle')
     req_headers = getRequestHeaders(slug=song_id, link='')
     r = requests.post(artist_song_loc, data=turtl, headers=req_headers, verify=False)
     song_loc = r.headers["Location"] if (r.status_code == 201) else None
@@ -99,26 +103,26 @@ def createArtistLDPs(artist_name, artist_etree, artists_loc, songs_loc):
         print("Artist metadata exists:", meta_loc)
     else:
         artists_cont = urljoin(CONTAINER, artists_loc)
+        base_uri = URIRef('')
         g = Graph()
         g.bind('mc', MC)
-        g.add((URIRef(artists_cont), RDF.type, MC.Artist))
-        g.add((URIRef(artists_cont), MC.performer_name, Literal(artist_name)))
-        g.add((URIRef(artists_cont), MC.etree,URIRef(artist_etree)))
-        turtl = g.serialize(None, base=artists_cont, format='turtle')
+        g.add((base_uri, RDF.type, MC.Artist))
+        g.add((base_uri, MC.performer_name, Literal(artist_name)))
+        g.add((base_uri, MC.etree,URIRef(artist_etree)))
+        turtl = g.serialize(None, base=base_uri, format='turtle')
         req_headers = getRequestHeaders(slug=artist_name, link='')
         r = requests.post(artists_cont, data=turtl, headers=req_headers, verify=False)
         meta_loc = r.headers["Location"] if (r.status_code == 201) else None
         print("Artist metadata add:", meta_loc)
-
     songs_cont = urljoin(CONTAINER, songs_loc)
-
     artist_song_loc = checkResource(songs_loc, predicate=MC.performer, obj=meta_loc)
     if artist_song_loc:
         print("Artist song exists:", artist_song_loc)
     else:
         g = Graph()
-        g.add((URIRef(songs_cont), MC.performer, URIRef(meta_loc)))
-        turtl = g.serialize(None, base=songs_cont, format='turtle')
+        base_uri = URIRef('')
+        g.add((base_uri, MC.performer, URIRef(meta_loc)))
+        turtl = g.serialize(None, base=base_uri, format='turtle')
         req_headers = getRequestHeaders(slug=artist_name)
         r = requests.post(songs_cont, data=turtl, headers=req_headers, verify=False)
         artist_song_loc = r.headers["Location"]
@@ -129,22 +133,56 @@ def createArtistLDPs(artist_name, artist_etree, artists_loc, songs_loc):
 
 def createSongTrackAnnotation(artist_loc, track_ids, song_loc, songs_to_recordings_loc):
     annotations_cont = urljoin(CONTAINER, songs_to_recordings_loc)
+    print(annotations_cont, 0)
     for track_id, calma_id in track_ids:
         g = Graph()
         g.bind('mc', MC)
         g.bind('oa', OA)
         annotation_id = randomId('annotation')
-        g.add((URIRef(annotations_cont), RDF.type, OA.Annotation))
-        g.add((URIRef(annotations_cont), OA.hasTarget, URIRef(song_loc)))
-        g.add((URIRef(annotations_cont), OA.hasBody, URIRef(track_id)))
-        g.add((URIRef(annotations_cont), OA.motivatedBy, MC.SONG_TO_RECORDING))
-        turtl = g.serialize(None, base=annotations_cont, format='turtle')
+        base_uri = URIRef('')
+        g.add((base_uri, RDF.type, OA.Annotation))
+        g.add((base_uri, OA.hasTarget, URIRef(song_loc)))
+        g.add((base_uri, OA.hasBody, URIRef(track_id)))
+        g.add((base_uri, OA.motivatedBy, MC.SONG_TO_RECORDING))
+        turtl = g.serialize(None, base=base_uri, format='turtle')    # serialises URIs relative to base uri
         req_headers = getRequestHeaders()
         req_headers["Link"] = ''
         req_headers["Slug"] = annotation_id
         r = requests.post(annotations_cont, data=turtl, headers=req_headers, verify=False)
         loc = r.headers["Location"] if (r.status_code == 201) else None
         print("Annotation add:", loc)
+
+
+def createSongWorkset(song_workset_loc, song_loc):
+    user = Literal(getpass.getuser())
+    songworkset_cont = urljoin(CONTAINER, song_workset_loc)
+    g = Graph()
+    g.bind('mc', MC)
+    g.bind('ldp', LDP)
+    g.bind('meld', MELD)
+    g.bind('dc', DC)
+    g.bind('dcterms', DCTERMS)
+    song_id = song_loc.split('/')[-1][:-4]
+    base_uri = URIRef('')
+    g.add((base_uri, RDF.type, MC.SongRef))  
+    g.add((base_uri, RDF.type, LDP.Resource))
+    g.add((base_uri, RDF.type, MELD.ItemRef))
+    g.add((base_uri, MELD.ref, URIRef(song_loc)))
+    g.add((base_uri, DC.creator, user))
+    g.add((base_uri, DCTERMS.created, Literal(datetime.now().astimezone())))
+    turtl = g.serialize(None, base=base_uri, format='turtle') # serialises URIs relative to base uri
+    req_headers = getRequestHeaders()
+    req_headers["Link"] = ''
+    req_headers["Slug"] = song_id
+    r = requests.post(songworkset_cont, data=turtl, headers=req_headers, verify=False)
+    loc = r.headers["Location"] if (r.status_code == 201) else None
+    print("Annotation add:", loc)
+
+
+def createRecordingWorkset(recording_workset_loc, song_loc):
+    pass
+
+
 
 
 def checkResource(cntnr, subject=None, predicate=None, obj=None):
@@ -187,17 +225,23 @@ def createTopLDPs():
     artists_loc = checkLDP('artists')
     songs_loc = checkLDP('artists_songs')
     recordings_loc = checkLDP('song_to_recording')
-    return artists_loc, songs_loc, recordings_loc
+    song_workset_loc = checkLDP('song_workset')
+    recording_workset_loc = checkLDP('recording_workset')
+    return artists_loc, songs_loc, recordings_loc, song_workset_loc, recording_workset_loc
 
 
 def main():
     artist_name = sys.argv[1]
     song_name = sys.argv[2]
-    artists_loc, songs_loc, recordings_loc = createTopLDPs()
+    artists_loc, songs_loc, recordings_loc, song_workset_loc, recording_workset_loc = createTopLDPs()
     artist_etree, track_etrees = queryTracks(artist_name, song_name)
     artist_loc, artist_song_loc = createArtistLDPs(artist_name, artist_etree, artists_loc, songs_loc)
     song_loc = createSongLDP(artist_name, song_name, artist_loc, artist_song_loc)
     createSongTrackAnnotation(artist_loc, track_etrees, song_loc, recordings_loc)
+
+    createSongWorkset(song_workset_loc, song_loc)
+    createRecordingWorkset(recording_workset_loc, song_loc)
+    
 
 
 

@@ -36,6 +36,7 @@ VAMP = Namespace('http://purl.org/ontology/vamp/')
 MO = Namespace('http://purl.org/ontology/mo/') 
 MC = Namespace('http://example.com/meldedcalma/')
 ETREE = Namespace('http://etree.linkedmusic.org/vocab/')
+OA = Namespace('http://www.w3.org/ns/oa#')
 
 
 FEATURE = AF.KeyChange
@@ -178,7 +179,8 @@ def checkLDP(sl):
 
 
 
-def makeTrackRdf(durations):#, transform_triples):
+
+def makeTrackRdf(durations):
     bar = ProgressBar(max_value=len(durations)).start()
     signal_uri = URIRef('#signal_0')
     timeline_uri = URIRef('#timeline_0')
@@ -195,23 +197,27 @@ def makeTrackRdf(durations):#, transform_triples):
         g.add(( time_uri, TL.onTimeLine, timeline_uri ))
         g.add(( time_uri, TL.duration, Literal('PT{0}S'.format(d[4]), datatype=XSD.duration) ))
         g.add(( URIRef(d[0]), ETREE.audio, URIRef(d[3]) ))
-        j = 0
+
+        localUri = URIRef('#')
+        g.add(( localUri, RDF.type, OA.Annotation  ))
+        #j = 0
         for k, v in d[2].items():
-            duration_uri = MC['#feature_duration_{0}'.format(j)]
-            g.add(( duration_uri, RDF.type, MC.FeatureDurationRatio ))
+            duration_uri = BNode()
+            g.add(( localUri, OA.hasBody, duration_uri ))
+            g.add(( duration_uri, RDF.type, MC.KeyDurationRatio ))
             g.add(( duration_uri, RDFS.label, Literal(k[1]) ))
             g.add(( duration_uri, MC.on_timeline, timeline_uri ))
             g.add(( duration_uri, MC.transform, URIRef('#transform_0') ))
             g.add(( duration_uri, MC.key_id, Literal(k[0]) ))
             g.add(( duration_uri, MC.duration_ratio, Literal(v, datatype=XSD.double) ))
-            j += 1
+            #j += 1
         g.serialize('rdf/{0}_{1}.ttl'.format(d[0].replace(ETREE_TRACK, ''), VAMP_OUTPUT.replace('#', '_')), format='turtle')
         bar.update(i)
     bar.finish()
 
-
 def initGraph():
     g = Graph()
+    g.bind('oa', OA)
     g.bind('vamp', VAMP)
     g.bind('event', EVENT)
     g.bind('etree', ETREE)
@@ -340,8 +346,6 @@ def getEtreeRecordings(songUri):
     for res in resources:
         print(res)
 
-
-
     return
 
 def main():
@@ -364,7 +368,7 @@ def main():
     #return
 
     tracks = queryTracks(artist, song)
-    print(tracks)
+    #print(tracks)
     #transform_triples = transformTriples(tracks)
     print('fetching audio features')
     bar = ProgressBar(max_value=len(tracks)).start()

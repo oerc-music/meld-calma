@@ -15,6 +15,7 @@ MC = Namespace('http://example.com/meldedcalma/')
 OA = Namespace('http://www.w3.org/ns/oa#')
 
 
+
 def getRequestHeaders(slug='', link='<http://www.w3.org/ns/ldp#BasicContainer>; rel="type"'):
     return { "Content-Type": "text/turtle",
              "Link": link,
@@ -46,7 +47,7 @@ def checkArtist(artist_name):
     else: return artist_res[0]  
 
 
-def artistSong(artist_res, song_name):
+def artistSong(artist_res, song_name):  
     g = ldpContains('artists_songs/')
     performer = list(g.subjects(MC.performer, artist_res))[0]
     g = ldpContains(performer)
@@ -76,18 +77,19 @@ def checkLdp(sl):
     return loc
 
 
-def postNumber(song_res, n, occur_cont):
+def postNumber(song_res, n, occur_cont):        # TODO: implement relative links for target song
     occur_id = randomId('song_occurrence')
-    song_occur_cont = urljoin(occur_cont, occur_id)
-    print(song_occur_cont)
+    base_uri = URIRef('')
     g = Graph()
-    g.add((URIRef(song_occur_cont), RDF.type, OA.Annotation))
-    g.add((URIRef(song_occur_cont), OA.hasTarget, URIRef(song_res)))
-    g.add((URIRef(song_occur_cont), OA.motivatedBy, MC.SONG_NUM_RECORDINGS))
+    g.bind('mc', MC)
+    g.bind('oa', OA)
+    g.add((base_uri, RDF.type, OA.Annotation))
+    g.add((base_uri, OA.hasTarget, URIRef(song_res)))
+    g.add((base_uri, OA.motivatedBy, MC.SONG_NUM_RECORDINGS))
     bnode = BNode()
-    g.add((URIRef(song_occur_cont), OA.hasBody, bnode))
+    g.add((base_uri, OA.hasBody, bnode))
     g.add((bnode, MC.number_of_recordings, Literal(n)))
-    turtl = g.serialize(None, base=song_occur_cont, format='turtle')
+    turtl = g.serialize(None, base=base_uri, format='turtle')
     req_headers = getRequestHeaders()
     req_headers["Link"] = ''
     req_headers["Slug"] = occur_id
