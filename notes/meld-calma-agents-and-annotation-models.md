@@ -168,7 +168,7 @@ So we would create resources like this:
 
 and
 
-      /public/recording_workset/song_id/recording_id.ttl:
+      /public/recording_worksets/song_id/recording_id.ttl:
         <>
             a mc:RecordingRef, meld:ItemRef, ldp:Resource;
             dc:creator "John";
