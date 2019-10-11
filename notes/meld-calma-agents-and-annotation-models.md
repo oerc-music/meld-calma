@@ -121,7 +121,6 @@ Proposed, then, is something like:
               rdfs:label "Acid Food by Mogwai" ;
               mc:song_name "Acid Food" ;
               mc:artist </public/artists/artist_Mogwai.ttl> ;  // (URIref link to entry in /artists)
-              mc:etree_song_id <xyzxyz> ; // (full URI in etree)
               .
           :
 
@@ -152,6 +151,32 @@ And maybe later...
             oa:hasBody   [ mc:artist_name "Mogwai" ] ;    // body is bnode; could (should?) have URI
             .
 
+In addition to the artist and son data, the agent also creates song workset and recording workset structures for the s=ongs and recordings that it processes (see sectio ns above for details).  Proposed container names for these are:
+
+      /public/song_workset
+      /public/recording_workset
+
+So we would crteate resources like this:
+
+      /public/song_workset/song_id.ttl
+        <>
+            a mc:SongRef, meld:ItemRef, ldp:Resource;
+            dc:creator "John";
+            dct:created "2019-06-01T14:09:58+0100";
+            meld:ref <artists_songs/Mogwai_xyz/song_xyz.ttl>
+            .
+
+and
+
+      /public/recording_workset/recording_id.ttl:
+        <>
+            a mc:RecordingRef, meld:ItemRef, ldp:Resource;
+            dc:creator "John";
+            dct:created "2019-06-01T14:09:58+0100";
+            meld:ref <etree recording URI>  # Value saved in song-to-recording
+            .
+
+(ensuring eeach song and recording is added to its workset just once.)
 
 Note that the structure of container names here is illustrative: agents and clients should discover container references by following indexes rather than knowledge of the naming structure used.
 
@@ -165,6 +190,8 @@ The "song to recording" annotation container is added to the "Song workset featu
 Pulling summarized information from eTree/CALMA.  Also, note that CALMA data doesn't have globally unique IDs, so need to allocate these (JPNP).  (This is why the source data is kept in TAR files.)
 
 For now, this functionality is incorporated directly into the song-to-signal agent.
+
+UPDATE: the logic for this is being included in the individual agent logic.
 
 
 ## Number of occurrences agent
