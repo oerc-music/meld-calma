@@ -2,13 +2,33 @@
 Support routines for creating and testing LDP containers
 """
 
-import requests, os, sys
-from urllib.parse import urljoin
+import requests, os, sys, getpass
+from urllib.parse       import urljoin
+from rdflib             import Graph, URIRef, Literal, BNode
+from rdflib             import Namespace, RDF, RDFS
+from rdflib.namespace   import DC, DCTERMS
+from urllib.parse       import urljoin
+from datetime           import datetime
 
 CONTAINER_BASE = os.environ["CONTAINER"] or "https://localhost:8443/public/"
 
+TEMPORARY_BASE = "http://example.org/temp/"
+
 GET_TURTLE_HEADER = { "Accept": "text/turtle" }
 
+OA      = Namespace('http://www.w3.org/ns/oa#')
+LDP     = Namespace('http://www.w3.org/ns/ldp#')
+MC      = Namespace('http://example.com/meldedcalma/')
+MELD    = Namespace('http://example.com/meld/')
+
+def get_current_user_id():
+    # Return string identifying the current user
+    # Use with DC.creator
+    return getpass.getuser()
+
+def get_timestamp():
+    # Use with DCTERMS.created
+    return datetime.now().astimezone()
 
 def check_container_exists(path):
     """
