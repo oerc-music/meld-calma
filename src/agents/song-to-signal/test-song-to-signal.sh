@@ -34,6 +34,7 @@ node $MELD_TOOL test-is-container /public/artists/
 node $MELD_TOOL test-is-container /public/artists_songs/
 node $MELD_TOOL test-is-container /public/artists_songs/Mogwai
 node $MELD_TOOL test-is-container /public/song_to_recording/
+#@@ test existence of recording workset
 
 # Test resource content
 
@@ -68,6 +69,8 @@ END
 
 # Test annotation content
 
+#@@ Select annotation by target + body
+
 RESOURCE=/public/song_to_recording/
 ANNOTATIONS=$(node $MELD_TOOL list-container $RESOURCE)
 for anno in $ANNOTATIONS; do
@@ -75,6 +78,8 @@ for anno in $ANNOTATIONS; do
     ANNOTATION=$anno
     break
 done
+
+#@@ Test specific body
 
 node $MELD_TOOL --stdinurl="$ANNOTATION" test-rdf-resource $ANNOTATION - <<END
 @prefix mc: <http://example.com/meldedcalma/> .
@@ -89,5 +94,7 @@ node $MELD_TOOL --stdinurl="$ANNOTATION" test-rdf-resource $ANNOTATION - <<END
     oa:hasTarget </public/artists_songs/Mogwai/acid_food_by_Mogwai.ttl> ;
     oa:motivatedBy mc:SONG_TO_RECORDING .
 END
+
+#@@ Test entry created in recording workset
 
 # End.
