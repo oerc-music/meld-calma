@@ -1,11 +1,10 @@
-# A decentralised MELD [agent] framework for computational analysis of Live 
-Music Archive
+# A decentralised MELD [agent] framework for computational analysis of Live Music Archive
 
 ## Background
 
-MELD [1] allows various music-related media to be connected/synchronized with each other via musically meaningful structure ,independently of vagaries such as timing within particular performances.  SOFA [2] is a tool originally developed for guided music composition from semantically described music fragments.
+MELD [9] allows various music-related media to be connected/synchronized with each other via musically meaningful structure, independently of vagaries such as timing within particular performances.  SOFA [2] is a tool originally developed for guided music composition from semantically described music fragments.
 
-We have been using ideas from SOFA to re-implement the logic of rCALMA, a tool for displaying musicological analyses over multiple performances of a work.
+We have been using ideas from SOFA to re-implement the logic of rCALMA [1], a tool for displaying musicological analyses over multiple performances of a work.
 
 
 ## Implementation
@@ -30,23 +29,23 @@ The current implementation makes no concessions to efficiency.  But by building 
 
 ## References
 
-[1] MELD, JCDL paper
+[1] Kevin R Page, Sean Bechhofer, György Fazekas, David M Weigl, and Thomas Wilmering. 2017. Realising a layered digital library: exploration and analysis of the live music archive through linked data. In Proceedings of the 17th ACM/IEEE Joint Conference on Digital Libraries (JCDL '17). IEEE Press, Piscataway, NJ, USA, 89-98.
 
-[2] DMRN SOFA paper/poster
+[2] De Roure, D., Klyne, G., Pybus, J., Weigl, D. M., & Page, K. (2018). Music SOFA: An architecture for semantically informed recomposition of Digital Music Objects (pp. 33–41). Association for Computing Machinery.
 
-[3] FRBR
+[3] Functional Requirements for Bibliographic Records (FRBR), https://www.ifla.org/publications/functional-requirements-for-bibliographic-records
 
-[4] MO (Music Ontology)
+[4] Music Ontology, http://purl.org/ontology/mo/
 
-[5] Web Annotations
+[5] Web Annotation Vocabulary, W3C Recommendation 23 February 2017, https://www.w3.org/TR/annotation-vocab/
 
-[6] LDP - Linked Data Platform
+[6] Linked Data Platform 1.0 (LDP), W3C Recommendation 26 February 2015, http://www.w3.org/TR/ldp/
 
-[7] RDF
+[7] RDF 1.1 Concepts and Abstract Syntax, http://www.w3.org/TR/rdf11-concepts/
 
-[8] HTTP
+[8] Hypertext Transfer Protocol (HTTP/1.1): Semantics and Content, https://httpwg.org/specs/rfc7231.html
 
-
+[9] Weigl, D., & Page, K. (2017). A framework for distributed semantic annotation of musical score: "Take it to the bridge!". International Society for Music Information Retrieval.
 
 
 <!--
