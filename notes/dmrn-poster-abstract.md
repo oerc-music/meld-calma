@@ -9,7 +9,7 @@ We have been using ideas from SOFA to re-implement the logic of rCALMA [1], a to
 
 ## Implementation
 
-SOFA operates on a workset of broadly homogeneous elements with semantic annotations (***LDP containers***), and employs multiple independent analyses of workset elements (***agents***) to create new containers of annotations that are used to inform selection options and to provide values for display, and a web application that reads these annotations to discover selection options, and build a corresponding user interface (***REST, uniform interface, and hypermedia-based discovery***).  The resulting display is in the form of a grid, whose visible contents are rendered by independent agents.  Element descriptions are generally based on existing generic linked data vocabularies, such as MELD [1], FRBR [3], MO [4], etc.
+SOFA [2] operates on a workset of broadly homogeneous elements with semantic annotations (***LDP containers***), and employs multiple independent analyses of workset elements (***agents***) to create new containers of annotations that are used to inform selection options and to provide values for display, and a web application that reads these annotations to discover selection options, and build a corresponding user interface (***REST, uniform interface, and hypermedia-based discovery***).  The resulting display is in the form of a grid, whose visible contents are rendered by independent agents.  Element descriptions are generally based on existing generic linked data vocabularies, such as MELD [9], FRBR [3], MO [4], etc.
 
 This design allows separation of analysis from presentation, allow a single presentation application to present new forms of analysis as new agents are implemented.
 
