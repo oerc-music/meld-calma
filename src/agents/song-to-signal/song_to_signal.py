@@ -179,9 +179,46 @@ def createSongWorkset(song_workset_loc, song_loc):
     print("Annotation add:", loc)
 
 
-def createRecordingWorkset(recording_workset_loc, song_loc):
-    pass
+def createRecordingWorkset(recording_workset_loc, artist_name, song_name, track_ids):
+    # TODO: check if already exists, see createArtistLDPs()
+    song_id = '{0} by {1}'.format(song_name, artist_name) 
+    recording_workset_cont = urljoin(CONTAINER, recording_workset_loc)
+    g = Graph()
+    base_uri = URIRef('')
+    turtl = g.serialize(None, base=base_uri, format='turtle')
+    req_headers = getRequestHeaders(slug=song_id)
+    r = requests.post(recording_workset_cont, data=turtl, headers=req_headers, verify=False)
+    recording_workset_sub = r.headers["Location"]
+    print("workset folder add:", recording_workset_sub)
+    recording_workset_sub_cont = urljoin(recording_workset_cont, recording_workset_sub)
 
+    # TODO: put in new funtion >>
+    user = Literal(getpass.getuser())
+    for track_id, calma_id in track_ids:
+        g = Graph()
+        g.bind('mc', MC)
+        g.bind('ldp', LDP)
+        g.bind('meld', MELD)
+        g.bind('dc', DC)
+        g.bind('dcterms', DCTERMS)
+
+        recordingref_id = randomId('recordingref')
+
+        base_uri = URIRef('')
+        g.add((base_uri, RDF.type, MC.RecordingRef))
+        g.add((base_uri, RDF.type, MELD.ItemRef))
+        g.add((base_uri, RDF.type, LDP.Resource))
+        g.add((base_uri, DC.creator, user))
+        g.add((base_uri, DCTERMS.created, Literal(datetime.now().astimezone())))
+        g.add((base_uri, MELD.ref, URIRef(track_id)))
+
+        turtl = g.serialize(None, base=base_uri, format='turtle')    # serialises URIs relative to base uri
+        req_headers = getRequestHeaders()
+        req_headers["Link"] = ''
+        req_headers["Slug"] = recordingref_id
+        r = requests.post(recording_workset_sub_cont, data=turtl, headers=req_headers, verify=False)
+        loc = r.headers["Location"] if (r.status_code == 201) else None
+        print("recording reference add:", loc)
 
 
 
@@ -238,9 +275,10 @@ def main():
     artist_loc, artist_song_loc = createArtistLDPs(artist_name, artist_etree, artists_loc, songs_loc)
     song_loc = createSongLDP(artist_name, song_name, artist_loc, artist_song_loc)
     createSongTrackAnnotation(artist_loc, track_etrees, song_loc, recordings_loc)
-
+    
     createSongWorkset(song_workset_loc, song_loc)
-    createRecordingWorkset(recording_workset_loc, song_loc)
+
+    createRecordingWorkset(recording_workset_loc, artist_name, song_name, track_etrees)
     
 
 
