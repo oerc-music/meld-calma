@@ -322,10 +322,11 @@ For all recordings, compute an "average" key distribution across all recordings 
       oa:motivatedBy mc:SONG_KEY_PREVALANCE ;
       oa:hasTarget (song reference in song workset)
       oa:hasBody 
-        [ mc:key_info 
-          [ rdfs:label "Dd major" (e.g.)
+        [ mc:key_info [
+            rdfs:label "Dd major" ; # (e.g.)
             mc:key_id "(key id)"^^xsd:integer ;
-            mc:average_prevalence "(fraction)"^(xsd:double) ;  // duration of key/duration of song * (something)
+            mc:average_prevalence "(fraction)"^(xsd:double) ;  
+                # duration of key/duration of song * (something)
           ]
         ]
       .
@@ -345,9 +346,10 @@ For each recording of a song, calculate a "key typicality" measure that represen
       oa:hasBody [ 
           mc:key_typicality "(fraction)"^(xsd:double) ;
           mc:key_info [ 
+            rdfs:label "Dd major" ;                         # (e.g.)
             mc:key_id (key id) ;
-            mc:prevalence "(fraction)"^xsd:double ;
-            mc:average_prevalence "(fraction)"^xsd:double ;=
+            mc:prevalence "(fraction)"^xsd:double ;         # this recording
+            mc:average_prevalence "(fraction)"^xsd:double ; # all recordings of song
           ]
         ]
       .
