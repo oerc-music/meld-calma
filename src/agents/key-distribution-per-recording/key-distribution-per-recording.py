@@ -352,9 +352,11 @@ def main():
     global bar
     createDirectory('temp')
     createDirectory('rdf') 
-    artist = 'Mogwai'   # sys.argv[1]
-    song = 'Acid Food'  # sys.argv[2]
-    song = song.lower()
+    #artist = 'Mogwai'   
+    #song = 'Acid Food'  
+    artist = sys.argv[1]
+    song = sys.argv[2]
+    #song = song.lower()
 
     artist_uri = checkArtist(artist)
     if artist_uri:
