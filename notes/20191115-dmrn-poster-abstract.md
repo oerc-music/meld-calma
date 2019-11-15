@@ -1,10 +1,10 @@
-# A decentralised MELD [agent] framework for computational analysis of Live Music Archive
+# A decentralised MELD agent framework for computational analysis of Live Music Archive
 
 ## Background
 
 MELD [9] allows various music-related media to be connected/synchronized with each other via musically meaningful structure, independently of vagaries such as timing within particular performances.  SOFA [2] is a tool originally developed for guided music composition from semantically described music fragments.
 
-We have been using ideas from SOFA to re-implement the logic of rCALMA [1], a tool for displaying musicological analyses over multiple performances of a work.
+We have been using ideas from SOFA to re-implement the logic of rCALMA [1], a tool for displaying musicological analyses over multiple performances of a work, as a MELD application.
 
 
 ## Implementation
@@ -13,18 +13,23 @@ SOFA [2] operates on a workset of broadly homogeneous elements with semantic ann
 
 This design allows separation of analysis from presentation, allow a single presentation application to present new forms of analysis as new agents are implemented.
 
-Existing linked data standards are re-used, notably the Web Annotations vocabulary [5] and Linked Data Platform protocol [6], which in turn are layered over RDF [7] and HTTP [8] respectively.  This allows server-side elements to run in an existing software infrastructure, with no special platform-dependent server applications, and the used interface to run in any modern browser, again with no special code needed.  (We successfully moved a previous version of the SOFA application from an earlier implementation of LDP (Gold) to a more modern one (Solid), without any fundamental change to the application logic.)
+Existing linked data standards are re-used, notably the Web Annotations vocabulary [5] and Linked Data Platform protocol [6], which in turn are layered over RDF [7] and HTTP [8] respectively.  This allows server-side elements to run in an existing software infrastructure, with no special platform-dependent server applications, and the used interface to run in any modern browser, again with no special code needed.  (We successfully moved a previous version of the SOFA application from an earlier implementation of LDP (Gold) to a more modern one (Solid [10]), without any fundamental change to the application logic.)
 
 By building on these standards, the (meta)data created is also available for repurposing by other applications.
 
 
 ## Future work
 
-For the most part, future work would consist of adding new agents to support new forms of analysis and presentation within the existing framework.  These would be self-contained, so not require any changes to existing software components, unless some new capability is required that doesn't fit within the workset and grid presentation model.
+Future work will consist of adding new agents to support new forms of analysis and presentation within the existing framework, and completing the web interface implementation.  These would be self-contained, so not require any changes to existing software components, unless some new capability is required that doesn't fit within the workset and grid presentation model.
 
 Currently missing is a mechanism for orchestrating agent activation.  Experiments with LDP container notifications indicate that we can arrange for agents to be activated automatically when data is updated given some means to connect agents to data elements, probably involving some additional linked data hypermedia structures, which have not yet been designed.
 
 The current implementation makes no concessions to efficiency.  But by building on a uniform interface (LDP), we can identify common access patterns and create optimized paths (in the form of specialized LDP implementations) to overcome any inefficiencies in the current implementation.
+
+
+## Ackowledgement
+
+This work is supported by Fusing Semantic and Audio Technologies for Intelligent Music Production and Consumption funded by the UK Engineering and Physical Sciences Research Council (EPSRC) under grant number EP/L019981/1, a collaboration between Queen Mary University of London, University of Nottingham and University of Oxford.
 
 
 ## References
@@ -46,6 +51,8 @@ The current implementation makes no concessions to efficiency.  But by building 
 [8] Hypertext Transfer Protocol (HTTP/1.1): Semantics and Content, https://httpwg.org/specs/rfc7231.html
 
 [9] Weigl, D., & Page, K. (2017). A framework for distributed semantic annotation of musical score: "Take it to the bridge!". International Society for Music Information Retrieval.
+
+[10] Solid (web decentralization project), https://en.wikipedia.org/wiki/Solid_(web_decentralization_project)
 
 
 <!--
