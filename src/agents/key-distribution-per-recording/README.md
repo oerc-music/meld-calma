@@ -15,6 +15,7 @@
         pip install rdflib
         pip install requests
         pip install SPARQLwrapper
+        pip install progressbar2
 
 4. Activate Python environment for agents (if not already done), and set CONTAINER and MELD_USERNAME environment variables:
 
@@ -35,6 +36,13 @@
 
 6. Back in the original shell environment, run the agent; e.g.:
 
-        # cd ~/workspace/github/oerc-music/meld-calma/src/agents/song-to-signal/        
-        python3 song_to_signal.py Mogwai "Acid food"
 
+        # cd ~/workspace/github/oerc-music/meld-calma/src/agents/song-to-signal/        
+        python3 key-distribution-per-recording.py "recording_workset/Acid_Food_by_Mogwai/"
+
+
+<!--
+        # cd ~/workspace/github/oerc-music/meld-calma/src/agents/song-to-signal/        
+        python3 song_to_signal.py Mogwai "acid food"
+
+ -->
