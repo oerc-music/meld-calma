@@ -253,6 +253,7 @@ def initGraph():
     g.bind('tl', TL)
     g.bind('mc', MC)
     g.bind('mo', MO)
+    g.bind('meld', MELD)
     g.bind('', '#')
     return g
 
