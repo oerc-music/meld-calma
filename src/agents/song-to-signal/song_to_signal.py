@@ -138,7 +138,8 @@ def createSongTrackAnnotation(artist_loc, track_ids, song_loc, songs_to_recordin
         g = Graph()
         g.bind('mc', MC)
         g.bind('oa', OA)
-        annotation_id = randomId('annotation')
+        annotation_id = 'song_to_rec_' + track_id.split('/')[-1] #randomId('annotation')
+
         base_uri = URIRef('')
         g.add((base_uri, RDF.type, OA.Annotation))
         g.add((base_uri, OA.hasTarget, URIRef(song_loc)))
@@ -212,7 +213,7 @@ def createRecordingWorkset(recording_workset_loc, artist_name, song_name, track_
         g.bind('dc', DC)
         g.bind('dcterms', DCTERMS)
 
-        recordingref_id = randomId('recordingref')
+        recordingref_id = 'recordingref_' + track_id.split('/')[-1] #randomId('recordingref')
 
         base_uri = URIRef('')
         g.add((base_uri, RDF.type, MC.RecordingRef))

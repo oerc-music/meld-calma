@@ -222,7 +222,8 @@ def makeTrackRdf(durations, durations_loc):
 
 
         annotations_cont = urljoin(CONTAINER, durations_loc)
-        annotation_id = randomId('annotation')
+        #annotation_id = randomId('annotation')
+        annotation_id = 'key_distribution_' + d[0].split('/')[-1]
         base_uri = URIRef('')
         turtl = g.serialize(None, base=base_uri, format='turtle') 
         req_headers = getRequestHeaders()
