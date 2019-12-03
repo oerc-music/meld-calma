@@ -158,7 +158,7 @@ def featureDuration(f, audio_dur):
         dur_dict[n[0]] += (f[i+1][1] - f[i][1])
     if f[i+1][0] not in dur_dict: dur_dict[f[i+1][0]] = 0
     dur_dict[f[i+1][0]] += (audio_dur - f[i+1][1])
-    return {k: v/audio_dur for k, v in dur_dict.items()}
+    return {k: v for k, v in dur_dict.items()}
 
 
 
@@ -209,7 +209,8 @@ def makeTrackRdf(durations):
             g.add(( duration_uri, MC.on_timeline, timeline_uri ))
             g.add(( duration_uri, MC.transform, URIRef('#transform_0') ))
             g.add(( duration_uri, MC.key_id, Literal(k[0]) ))
-            g.add(( duration_uri, MC.duration_ratio, Literal(v, datatype=XSD.double) ))
+            g.add(( duration_uri, MC.key_duration, Literal(v, datatype=XSD.double) ))
+            g.add(( duration_uri, MC.duration_ratio, Literal(v/d[4], datatype=XSD.double) ))
             #j += 1
         g.serialize('rdf/{0}_{1}.ttl'.format(d[0].replace(ETREE_TRACK, ''), VAMP_OUTPUT.replace('#', '_')), format='turtle')
         bar.update(i)
