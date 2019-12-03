@@ -131,7 +131,7 @@ def createArtistLDPs(artist_name, artist_etree, artists_loc, songs_loc):
     return meta_loc, artist_song_loc
     
 
-def createSongTrackAnnotation(artist_loc, track_ids, song_loc, songs_to_recordings_loc):
+def createSongTrackAnnotation(artist_loc, track_ids, song_loc, songs_to_recordings_loc, etree_to_workset):
     annotations_cont = urljoin(CONTAINER, songs_to_recordings_loc)
     print(annotations_cont, 0)
     for track_id, calma_id in track_ids:
@@ -142,7 +142,15 @@ def createSongTrackAnnotation(artist_loc, track_ids, song_loc, songs_to_recordin
         base_uri = URIRef('')
         g.add((base_uri, RDF.type, OA.Annotation))
         g.add((base_uri, OA.hasTarget, URIRef(song_loc)))
-        g.add((base_uri, OA.hasBody, URIRef(track_id)))
+        #g.add((base_uri, OA.hasBody, URIRef(track_id)))
+
+        bnode = BNode()
+        g.add((base_uri, OA.hasBody, bnode))
+        g.add((bnode, MELD.ref, URIRef(track_id)))
+        g.add((bnode, MC.workset_ref, URIRef(etree_to_workset[track_id])))
+
+
+
         g.add((base_uri, OA.motivatedBy, MC.SONG_TO_RECORDING))
         turtl = g.serialize(None, base=base_uri, format='turtle')    # serialises URIs relative to base uri
         req_headers = getRequestHeaders()
@@ -179,7 +187,7 @@ def createSongWorkset(song_workset_loc, song_loc):
     print("Annotation add:", loc)
 
 
-def createRecordingWorkset(recording_workset_loc, artist_name, song_name, track_ids):
+def createRecordingWorkset(recording_workset_loc, artist_name, song_name, track_ids, song_loc):
     # TODO: check if already exists, see createArtistLDPs()
     song_id = '{0} by {1}'.format(song_name, artist_name) 
     recording_workset_cont = urljoin(CONTAINER, recording_workset_loc)
@@ -193,6 +201,8 @@ def createRecordingWorkset(recording_workset_loc, artist_name, song_name, track_
     recording_workset_sub_cont = urljoin(recording_workset_cont, recording_workset_sub)
 
     # TODO: put in new funtion >>
+    # TODO: replace dict of etree_id >> recording workset entr with more efficent function
+    etree_to_workset = {}
     user = Literal(getpass.getuser())
     for track_id, calma_id in track_ids:
         g = Graph()
@@ -212,13 +222,22 @@ def createRecordingWorkset(recording_workset_loc, artist_name, song_name, track_
         g.add((base_uri, DCTERMS.created, Literal(datetime.now().astimezone())))
         g.add((base_uri, MELD.ref, URIRef(track_id)))
 
+        g.add((base_uri, MC.artist_song_ref, URIRef(song_loc)))
+        
+
         turtl = g.serialize(None, base=base_uri, format='turtle')    # serialises URIs relative to base uri
         req_headers = getRequestHeaders()
         req_headers["Link"] = ''
         req_headers["Slug"] = recordingref_id
         r = requests.post(recording_workset_sub_cont, data=turtl, headers=req_headers, verify=False)
-        loc = r.headers["Location"] if (r.status_code == 201) else None
+        #loc = r.headers["Location"] if (r.status_code == 201) else None
+        if (r.status_code == 201):
+            loc = r.headers["Location"]
+            etree_to_workset[track_id] = loc
+        else:
+            loc = None
         print("recording reference add:", loc)
+    return etree_to_workset
 
 
 
@@ -274,13 +293,9 @@ def main():
     artist_etree, track_etrees = queryTracks(artist_name, song_name)
     artist_loc, artist_song_loc = createArtistLDPs(artist_name, artist_etree, artists_loc, songs_loc)
     song_loc = createSongLDP(artist_name, song_name, artist_loc, artist_song_loc)
-    createSongTrackAnnotation(artist_loc, track_etrees, song_loc, recordings_loc)
     
     createSongWorkset(song_workset_loc, song_loc)
-
-    createRecordingWorkset(recording_workset_loc, artist_name, song_name, track_etrees)
+    etree_to_workset = createRecordingWorkset(recording_workset_loc, artist_name, song_name, track_etrees, song_loc)
+    createSongTrackAnnotation(artist_loc, track_etrees, song_loc, recordings_loc, etree_to_workset)
     
-
-
-
 main()
