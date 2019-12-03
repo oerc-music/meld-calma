@@ -439,7 +439,7 @@ def main():
     #return
     tracks = queryTracks(artist, song)
     '''
-    tracks = getEtreeRecordingReferences()
+    tracks = getEtreeRecordingReferences(workset)
     #print(tracks)
     #transform_triples = transformTriples(tracks)
     print('fetching audio features')
