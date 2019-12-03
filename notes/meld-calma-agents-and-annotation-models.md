@@ -279,6 +279,9 @@ The resulting annotations would have this general form:
         [ a mc:KeyDurationRatio ;
           rdfs:label "Dd major" ;
           mc:key_id "(key id)"^^xsd:integer ;
+<!-- @@TODO
+          mc:duration "(real)"^(xsd:double) ;
+ -->
           mc:duration_ratio "(fraction)"^(xsd:double) ;  // key-duration/recording-duration;
           mc:on_timeline <#timeline> ;
           mc:transform <#transform> ;
@@ -287,6 +290,9 @@ The resulting annotations would have this general form:
         [ a mc:KeyDurationRatio ;
           rdfs:label "Bd major" ;
           mc:key_id "(key id)"^^xsd:integer ;
+<!-- @@TODO
+          mc:duration "(real)"^(xsd:double) ;
+ -->
           mc:duration_ratio "(fraction)"^(xsd:double) ;  // key-duration/recording-duration
           mc:on_timeline <#timeline> ;
           mc:transform <#transform> ;
