@@ -1,4 +1,3 @@
-# TODO: write to server, currently writes local rdf
 
 from SPARQLWrapper import SPARQLWrapper, JSON
 from rdflib import Graph, Namespace, RDF, RDFS, URIRef, BNode, Literal, XSD
@@ -20,12 +19,11 @@ if (os.environ["CONTAINER"]): CONTAINER = os.environ["CONTAINER"]
 
 TTLHEADER = { "Accept": "text/turtle" }
 
-LDP = Namespace('http://www.w3.org/ns/ldp#')
-
-
 SPARQL = SPARQLWrapper("http://etree.linkedmusic.org/sparql")
 SPARQL.setReturnFormat(JSON)
 
+
+LDP = Namespace('http://www.w3.org/ns/ldp#')
 ETREE_TRACK = Namespace('http://etree.linkedmusic.org/track/')
 PROV = Namespace('http://www.w3.org/ns/prov#')
 EVENT = Namespace('http://purl.org/NET/c4dm/event.owl#')
@@ -37,6 +35,7 @@ MO = Namespace('http://purl.org/ontology/mo/')
 MC = Namespace('http://example.com/meldedcalma/')
 ETREE = Namespace('http://etree.linkedmusic.org/vocab/')
 OA = Namespace('http://www.w3.org/ns/oa#')
+MELD = Namespace('http://example.com/meld/')
 
 
 FEATURE = AF.KeyChange
@@ -60,9 +59,11 @@ SELECT ?track ?calma ?date
     ORDER by ?date
 '''
 
-ETREE_SOLID_QUERY = '''
-
-'''
+CALMA_QUERY = '''
+PREFIX calma: <http://calma.linkedmusic.org/vocab/>
+PREFIX etree: <http://etree.linkedmusic.org/vocab/>
+SELECT ?calma
+{{  <{0}> calma:data ?calma . }}'''
 
 TRANSFORM_QUERY = '''
 PREFIX vamp: <http://purl.org/ontology/vamp/>
@@ -84,6 +85,7 @@ def getRequestHeaders(slug='', link='<http://www.w3.org/ns/ldp#BasicContainer>; 
              "Link": link,
              "Slug": slug.replace(' ', '_') }
 
+'''
 def queryTracks(artist, song):
     # if multiple recordings for one date, try to find SBD flac16
     result_dict = {}
@@ -110,7 +112,7 @@ def queryTracks(artist, song):
             if p == None: p = v[0]
             result.append(p)
     return result
-
+'''
 
 def calmaRdf(t, f):
     url = t + '/' + f + '.ttl'
@@ -180,12 +182,12 @@ def checkLDP(sl):
 
 
 
-def makeTrackRdf(durations):
-    bar = ProgressBar(max_value=len(durations)).start()
+def makeTrackRdf(durations, durations_loc):
+    #bar = ProgressBar(max_value=len(durations)).start()
     signal_uri = URIRef('#signal_0')
     timeline_uri = URIRef('#timeline_0')
     for i, d in enumerate(durations):
-        transform_triples = d[-1]
+        transform_triples = d[5]
         g = initGraph()
         [g.add(t) for t in transform_triples]
         g.add(( d[3], RDF.type, MO.AudioFile ))
@@ -198,8 +200,12 @@ def makeTrackRdf(durations):
         g.add(( time_uri, TL.duration, Literal('PT{0}S'.format(d[4]), datatype=XSD.duration) ))
         g.add(( URIRef(d[0]), ETREE.audio, URIRef(d[3]) ))
 
+
         localUri = URIRef('#')
         g.add(( localUri, RDF.type, OA.Annotation  ))
+        g.add(( localUri, OA.motivatedBy, MC.KEY_DURATIONS_RATIOS ))
+
+        g.add(( localUri, OA.hasTarget, URIRef(urljoin(CONTAINER, d[6]))))
         #j = 0
         for k, v in d[2].items():
             duration_uri = BNode()
@@ -212,10 +218,31 @@ def makeTrackRdf(durations):
             g.add(( duration_uri, MC.key_duration, Literal(v, datatype=XSD.double) ))
             g.add(( duration_uri, MC.duration_ratio, Literal(v/d[4], datatype=XSD.double) ))
             #j += 1
-        g.serialize('rdf/{0}_{1}.ttl'.format(d[0].replace(ETREE_TRACK, ''), VAMP_OUTPUT.replace('#', '_')), format='turtle')
-        bar.update(i)
-    bar.finish()
+        #g.serialize('rdf/{0}_{1}.ttl'.format(d[0].replace(ETREE_TRACK, ''), VAMP_OUTPUT.replace('#', '_')), format='turtle')
 
+
+        annotations_cont = urljoin(CONTAINER, durations_loc)
+        annotation_id = randomId('annotation')
+        base_uri = URIRef('')
+        turtl = g.serialize(None, base=base_uri, format='turtle') 
+        req_headers = getRequestHeaders()
+        req_headers["Link"] = ''
+        req_headers["Slug"] = annotation_id
+        r = requests.post(annotations_cont, data=turtl, headers=req_headers, verify=False)
+        loc = r.headers["Location"] if (r.status_code == 201) else None
+        print("Annotation add:", loc)
+
+
+
+
+        #bar.update(i)
+    #bar.finish()
+
+
+def randomId(s):
+    return s + '_' + str(uuid4()).replace('-','')
+
+    
 def initGraph():
     g = Graph()
     g.bind('oa', OA)
@@ -263,6 +290,7 @@ def getFeatures(args):
 def _getFeatures(t, q):
     etree_track = t[0]#.replace(ETREE_TRACK, '')
     calma_track = t[1]
+    recording_ref = t[2]
     transform_triples = transformTriples(t[1])
     g_metadata = calmaRdf(calma_track, 'metadata')
     audio_dur = trackDur(g_metadata)
@@ -272,7 +300,7 @@ def _getFeatures(t, q):
     durations = featureDuration(feature_events, audio_dur)
     audio_uri = list(g_analysis.subjects(RDF.type, MO.AudioFile))[0]
     q.put(1)
-    return [etree_track, audio_dur, durations, audio_uri, audio_dur, transform_triples]
+    return [etree_track, audio_dur, durations, audio_uri, audio_dur, transform_triples, recording_ref]
 
 
 def keyCorpusProportions(features_list):
@@ -301,7 +329,7 @@ def createDirectory(d):
     if not os.path.exists(d):
         os.mkdir(d)
 
-
+'''
 def checkArtist(artist):
     artist_cont = CONTAINER + 'artists/'
     r = requests.get(artist_cont , headers=TTLHEADER, verify=False)
@@ -335,7 +363,7 @@ def checkSong(artist_uri, song):
             q = SONG_QUERY.format(artist_uri, song)
             qr = list(g.query(q))
             if qr != []: return qr[0][0]
-
+'''
 
 def getEtreeRecordings(songUri):
     song_rec_cont = CONTAINER + 'song_to_recording/'
@@ -343,34 +371,75 @@ def getEtreeRecordings(songUri):
     g = Graph()
     g.parse(data=r.content, format='turtle', publicID=song_rec_cont)
     resources = g.objects(predicate=LDP.contains)
-    
     for res in resources:
         print(res)
-
     return
+
+
+def getEtreeRecordingReferences(workset):
+    cont = urljoin(CONTAINER, workset)
+    r = requests.get(cont , headers=TTLHEADER, verify=False)
+    g = Graph()
+    g.parse(data=r.content, format='turtle', publicID=cont)
+    refs = g.objects(predicate=LDP.contains)
+    results = []
+    for ref in refs:
+        g_ref = Graph()
+        r = requests.get(str(ref), headers=TTLHEADER, verify=False)
+        g_ref.parse(data=r.content, format='turtle', publicID=cont)
+        etree_ref = str(list(g_ref.objects(predicate=MELD.ref))[0])
+        calma_ref = getCalmaEtree(etree_ref)
+        recording_ref = ref.split(CONTAINER)[-1]
+        results.append((etree_ref, calma_ref, recording_ref))
+    return results
+
+
+def getCalmaEtree(track):
+    q = CALMA_QUERY.format(track)
+    SPARQL.setQuery(q)
+    res = SPARQL.query().convert()
+    for r in res["results"]["bindings"]:
+        return str(r['calma']['value'])
+
+
+def checkLDP(sl):
+    cont = CONTAINER + sl + '/'
+    r = requests.get(cont , headers=TTLHEADER, verify=False)
+    if r.status_code == 200:
+        loc = cont
+        print('{0} exists:'.format(sl), loc)
+    elif r.status_code == 401:
+        raise "Need to run Solid server with webid=false"
+    else:
+        req_headers = getRequestHeaders(slug=sl)
+        r = requests.post(CONTAINER, headers=req_headers, verify=False)
+        loc = r.headers["Location"]
+        print('{0} add:'.format(sl), loc)
+    return loc
+
+
 
 def main():
     global bar
+    workset = sys.argv[1] # ="recording_workset/Acid_Food_by_Mogwai")
+    durations_loc = checkLDP('key_distribution_per_recording')
     createDirectory('temp')
-    createDirectory('rdf') 
-    #artist = 'Mogwai'   
-    #song = 'Acid Food'  
+    #createDirectory('rdf') 
+    '''
     artist = sys.argv[1]
     song = sys.argv[2]
     #song = song.lower()
-
     artist_uri = checkArtist(artist)
     if artist_uri:
         print(artist_uri)
         song_uri = checkSong(artist_uri, song)
         if song_uri: print(song_uri)
         else: return
-
     #getEtreeRecordings(song_uri)
-        
     #return
-
     tracks = queryTracks(artist, song)
+    '''
+    tracks = getEtreeRecordingReferences()
     #print(tracks)
     #transform_triples = transformTriples(tracks)
     print('fetching audio features')
@@ -383,18 +452,14 @@ def main():
     pool.close()
     pool.join()
     bar.finish()
-
     print('serialising RDF')
-    makeTrackRdf(features_list)#, transform_triples)
+    makeTrackRdf(features_list, durations_loc)#, transform_triples)
 
     #key_dist_rec_loc = checkLDP('key distribution per recording')
-    
-
-
     #key_corpus_proportions = keyCorpusProportions(features_list)  # check if working correctly
     #key_typicalities = keyTypicalities(features_list, key_corpus_proportions)
 
     #[print(k) for k in key_typicalities]
-     
 
 main()
+
