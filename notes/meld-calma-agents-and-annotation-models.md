@@ -133,8 +133,13 @@ Proposed, then, is something like:
           <> a oa:Annotation ;
             oa:motivatedBy mc:SONG_TO_RECORDING ;
             oa:hasTarget </public/artists_songs/artist_xyz/song_xyz.ttl> // URIref to entry in /artists_songs...
-            oa:hasBody <etree_recording_id>
+            oa:hasBody 
+              [ meld:ref       <etree_recording_id>
+              ; mc:workset_ref <reference recording workset entry>
+              ]
             .
+
+@@NOTE: it would probably be more in the SOFA spirit to have the annotation target be the recording workset entry, and have the body reference the artists_songs entry using `mc:artist_song_ref`, and to rename the container and motivation to reflect this (e.g. `mc:RECORDING_TO_SONG`, etc.)
 
 And maybe later...
 
@@ -155,7 +160,7 @@ And maybe later...
             oa:hasBody   [ mc:artist_name "Mogwai" ] ;    // body is bnode; could (should?) have URI
             .
 
-In addition to the artist and son data, the agent also creates song workset and recording workset structures for the songs and recordings that it processes (see sections above for details).  Proposed container names for these are:
+In addition to the artist and song data, the agent also creates song workset and recording workset structures for the songs and recordings that it processes (see sections above for details).  Proposed container names for these are:
 
       /public/song_workset
       /public/recording_workset/song_id/
@@ -177,14 +182,17 @@ and
             a mc:RecordingRef, meld:ItemRef, ldp:Resource;
             dc:creator "John";
             dct:created "2019-06-01T14:09:58+0100";
-            meld:ref <etree recording URI>  # Value saved in song-to-recording
+            meld:ref <etree recording URI>;
+                # Value saved in song-to-recording
+            mc:artist_song_ref <artists_songs entry ref>;
+                # same as target of corresponding song_to_recording annotation
             .
 
 (ensuring each song and recording is added to its workset just once.)
 
 Note that the structure of container names here is illustrative: agents and clients should discover container references by following indexes rather than knowledge of the naming structure used.
 
-Note that annotations are defined using the `<>` for a URI reference: this resolves to the URI of the containing resource, and can be used to dereference a fgiven annotation (e.g. if annotations are being processed from a graph of merged annotations.)
+Note that annotations are defined using the `<>` for a URI reference: this resolves to the URI of the containing resource, and can be used to dereference a given annotation (e.g. if annotations are being processed from a graph of merged annotations.)
 
 The "song to recording" annotation container is added to the "Song workset feature index"
 
@@ -274,14 +282,12 @@ The resulting annotations would have this general form:
 
     <> a oa:Annotation ;
       oa:motivatedBy mc:KEY_DURATION_RATIOS ;
-      oa:hasTarget (recording reference in recording workset, which references CALMA recording)
+      oa:hasTarget (recording URI-reference in recording workset, which references CALMA recording)
       oa:hasBody 
         [ a mc:KeyDurationRatio ;
           rdfs:label "Dd major" ;
           mc:key_id "(key id)"^^xsd:integer ;
-<!-- @@TODO
-          mc:duration "(real)"^(xsd:double) ;
- -->
+          mc:key_duration "(real)"^(xsd:double) ;
           mc:duration_ratio "(fraction)"^(xsd:double) ;  // key-duration/recording-duration;
           mc:on_timeline <#timeline> ;
           mc:transform <#transform> ;
@@ -290,9 +296,7 @@ The resulting annotations would have this general form:
         [ a mc:KeyDurationRatio ;
           rdfs:label "Bd major" ;
           mc:key_id "(key id)"^^xsd:integer ;
-<!-- @@TODO
-          mc:duration "(real)"^(xsd:double) ;
- -->
+          mc:key_duration "(real)"^(xsd:double) ;
           mc:duration_ratio "(fraction)"^(xsd:double) ;  // key-duration/recording-duration
           mc:on_timeline <#timeline> ;
           mc:transform <#transform> ;
